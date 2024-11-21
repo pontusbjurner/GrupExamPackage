@@ -1,10 +1,11 @@
 Package: GrupExamPackage
-Title: What the Package Does (One Line, Title Case)
+Title: An algorithm used on images to convert the colors
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
+    person("Pontus", "Bjurner", , "pontus.bjurner@ki.se", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Description: An algorithm used on images to convert 
+the colors of each pixel to grey, red, green or blue.
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
 Encoding: UTF-8
