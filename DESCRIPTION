@@ -3,7 +3,7 @@ Title: An algorithm used on images to convert the colors
 Version: 0.0.0.9000
 Authors@R: 
     person("Pontus", "Bjurner", , "pontus.bjurner@ki.se", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+           comment = c(ORCID = "0000-0002-4967-9128"))
 Description: An algorithm used on images to convert 
 the colors of each pixel to grey, red, green or blue.
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
