@@ -1,9 +1,9 @@
 #' @title Image filter
 #'
-#' @param
-#' @param
+#' @param bitmapimage
+#' @param pixelvector
 #'
-#' @return
+#' @return grey or color filtered image
 #'
 #' @examples
 #'
@@ -13,82 +13,87 @@ library(magick)
 # load image
 my_object <- image_read("Test image-1.jpg")
 # convert image
-my_bitmap <- my_object[[1]]
+my_bitmap <-my_object[[1]]
+
+
+# view image
 image_read(my_bitmap)
-View(my_bitmap)
 
-# Grayscale conversion function
-rgb_to_gray <- function(r, g, b) {
-  gray_value <- round(r * 0.299 + g * 0.587 + b * 0.114)
-  return(rep(gray_value, 3))  # Return a vector with same grayscale value for all channels
+## gray and color filter functions ##
+# Grayscale filter function
+gray_filter <- function(bitmap) {
+  # Extract RGB values
+  r <- as.numeric(bitmap[1])
+  g <- as.numeric(bitmap[2])
+  b <- as.numeric(bitmap[3])
+
+  # Grayscale value using the weighted average formula
+  grayscale <- round(0.299 * r + 0.587 * g + 0.114 * b)
+
+  # Return grayscale value repeated for R, G, and B as raw
+  as.raw(rep(grayscale, 3))
 }
-# Color cut-off function
-color_cutoff <- function(r, g, b, threshold = 127) {
-  # Convert the pixel to grayscale first
-  gray_value <- round(r * 0.299 + g * 0.587 + b * 0.114)
 
-  # Apply a color cut-off based on the threshold
-  if (gray_value < threshold) {
-    # If below threshold, color it red
-    return(c(255, 0, 0))  # RGB for red
+# Color filter function (unchanged since it already uses raw)
+color_filter <- function(bitmap, threshold = 127) {
+  # Extract RGB values
+  r <- as.numeric(bitmap[1])
+  g <- as.numeric(bitmap[2])
+  b <- as.numeric(bitmap[3])
+
+  # Calculate grayscale
+  grayscale <- round(0.299 * r + 0.587 * g + 0.114 * b)
+
+  # Apply threshold
+  if (grayscale > threshold) {
+    as.raw(c(255, 0, 0))  # Red if above threshold
   } else {
-    # If above threshold, color it green
-    return(c(0, 255, 0))  # RGB for green
+    as.raw(c(0, 0, 255))  # Blue if below threshold
   }
 }
 
-# Function to process image with a given filter (grayscale or color cutoff)
-apply_filter <- function(my_bitmap, filter_function, threshold = 127) {
-  # Get image dimensions
-  height <- dim(my_bitmap)[1]
-  width <- dim(my_bitmap)[2]
 
-  # Iterate over each pixel and apply the filter
-  for (y in 1:height) {
-    for (x in 1:width) {
-      # Get the RGB values of the pixel (ensure they are numeric)
-      r <- as.numeric(my_bitmap[y, x, 1])
-      g <- as.numeric(my_bitmap[y, x, 2])
-      b <- as.numeric(my_bitmap[y, x, 3])
+#image filter function
+apply_filter <- function(bitmap, filter_function, threshold = NULL) {
+  dims <- dim(bitmap)  # dims[1]: color channels, dims[2]: width, dims[3]: height
 
-      # Check if the filter function expects a threshold argument
-      if (length(formals(filter_function)) == 3) {
-        # If the function expects 3 arguments (no threshold), apply it directly
-        new_color <- filter_function(r, g, b)
+  # Create a copy to hold the filtered image
+  filtered_bitmap <- bitmap
+
+  # Iterate through width and height
+  for (y in 1:dims[2]) {  # Columns
+    for (z in 1:dims[3]) {  # Rows
+      # Extract the RGB vector for the current pixel
+      pixel <- bitmap[, y, z]
+
+      # Apply the filter function, with or without a threshold
+      if (!is.null(threshold)) {
+        filtered_pixel <- filter_function(pixel, threshold)
       } else {
-        # If the function expects 4 arguments (with threshold), pass the threshold
-        new_color <- filter_function(r, g, b, threshold)
+        filtered_pixel <- filter_function(pixel)
       }
 
-      # Set the new color back to the pixel
-      my_bitmap[y, x, 1] <- new_color[1]  # Update red channel
-      my_bitmap[y, x, 2] <- new_color[2]  # Update green channel
-      my_bitmap[y, x, 3] <- new_color[3]  # Update blue channel
+      # Assign the result back to the filtered bitmap
+      filtered_bitmap[, y, z] <- filtered_pixel
     }
   }
 
-  return(my_bitmap)
+  return(filtered_bitmap)
 }
 
 
-# Apply grayscale filter (no threshold needed for grayscale)
-grayscale_bitmap <- apply_filter(my_bitmap, rgb_to_gray)
+# Apply the grayscale filter
+grayscale_bitmap <- apply_filter(my_bitmap, gray_filter)
 
-# Create a new image from the modified bitmap
+# Convert back to an image and display
 grayscale_image <- image_read(grayscale_bitmap)
-
-# Display the grayscale image
 print(grayscale_image)
 
-# Apply color cut-off filter with a threshold (127)
-cutoff_bitmap <- apply_filter(my_bitmap, color_cutoff, threshold = 127)
 
-# Create a new image from the modified bitmap
-cutoff_image <- image_read(cutoff_bitmap)
+# Apply color filter with a threshold of 127
+color_filtered_bitmap <- apply_filter(my_bitmap, color_filter, threshold = 127)
 
-# Display the cut-off image
-print(cutoff_image)
+# Convert back to an image and display
+color_image <- image_read(color_filtered_bitmap)
+print(color_image)
 
-# Save the processed image
-image_write(grayscale_image, "grayscale_image.jpeg")
-image_write(cutoff_image, "cutoff_image.jpeg")
